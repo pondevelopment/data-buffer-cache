@@ -15,9 +15,8 @@ export default {
 
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.js'],
-  coveragePathIgnorePatterns: ['/src/run.js', '__fixtures__', '__tests__', 'seeders'],
+  coveragePathIgnorePatterns: ['/src/run.js', '__fixtures__', '__tests__', '/src/example.js'],
 
-  setupFiles: ['./.jest/setEnvVars.js'],
   reporters: [
     'default',
     [ 'jest-junit', {

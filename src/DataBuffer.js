@@ -1,4 +1,4 @@
-// Copyright 2021 Pon Holding
+// Copyright 2022 Pon Holding
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@ import EventEmitter from 'events'
 
 /**
  * @typedef {Object} cache
- * @property {function} get 
+ * @property {function} get
  * @property {function} set
  * @property {function} exists
  */
@@ -29,13 +29,14 @@ export default class DataBuffer extends EventEmitter {
     running: 'running',
     finished: 'finished'
   }
+
   #allowedRaceTimeMS
   #currentStatus
   #cache
 
   /**
    * Initialize the DataBuffer
-   * 
+   *
    * @param {object} obj - Initialization of the class
    * @param {string} obj.key - The caching/buffer key
    * @param {Cache} obj.cache - The cache object
@@ -43,19 +44,19 @@ export default class DataBuffer extends EventEmitter {
    * @param {number} obj.raceTime - How long will the first request get before its been ignored in seconds
    * @param {*} obj.logger - A logger object, defaults to console
    */
-  constructor ({key, cache, ttl = 300, raceTime = 30, logger = console}) {
+  constructor ({ key, cache, ttl = 300, raceTime = 30, logger = console }) {
     super()
     this.key = key
     this.#allowedRaceTimeMS = raceTime * 1000
-    this.#stdTTL = ttl //standard 5 minute availability
+    this.#stdTTL = ttl // standard 5 minute availability
     this.setExpiry()
     this.#cache = cache
     this.#currentStatus = this.#status.init
     this.logger = logger
   }
 
-  setExpiry(ttl) {
-    this.expire =  Date.now() + (ttl || this.#stdTTL * 1000)
+  setExpiry (ttl) {
+    this.expire = Date.now() + (ttl || this.#stdTTL * 1000)
   }
 
   cleanUp () {
@@ -64,10 +65,10 @@ export default class DataBuffer extends EventEmitter {
 
   /**
    * Get the data
-   * Return a promise that resolves with the data 
+   * Return a promise that resolves with the data
    * or undefined when it was expired, not available or timed out
-   * 
-   * @returns {Promise|undefined} 
+   *
+   * @returns {Promise|undefined}
    */
   async get () {
     try {
@@ -81,13 +82,13 @@ export default class DataBuffer extends EventEmitter {
 
   /**
    * Set the data
-   * @param {Object} value - The object to put in the cache
+   * @param {object} value - The object to put in the cache
    * @param {number} ttl - Time To Live for the cache object in seconds
-   * 
+   *
    * @returns {*} - The result of the Cache set Method
    */
   async set (value, ttl = this.#stdTTL) {
-    if (value.constructor !== Object && value.constructor !== Array) {
+    if (!value || (value.constructor !== Object && value.constructor !== Array)) {
       throw new Error('value should be an object')
     }
 
@@ -100,7 +101,7 @@ export default class DataBuffer extends EventEmitter {
 
   async waitForResponse () {
     // the status is on init, set the status to running and let the first call set the value
-    if(this.#currentStatus === this.#status.init) {
+    if (this.#currentStatus === this.#status.init) {
       this.#currentStatus = this.#status.running
       return undefined
     }
@@ -120,7 +121,7 @@ export default class DataBuffer extends EventEmitter {
     }
 
     // the status is running, so we wait until the cache gets set
-    // or till we waited long enough    
+    // or till we waited long enough
     const p1 = new Promise((resolve) => {
       this.once(this.#status.finished, async () => {
         const data = await this.#cache.get(this.key)

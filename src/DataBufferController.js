@@ -1,4 +1,4 @@
-// Copyright 2021 Pon Holding
+// Copyright 2022 Pon Holding
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@ export default class DataBufferController {
   #cache
   #intervalRef
 
-  constructor (cache, logger, ttl = 300, raceTime = 30) {
+  constructor ({ cache = null, logger = console, ttl = 300, raceTime = 30 }) {
     this.#items = {}
-    this.#cache = (cache) ? cache :  new Cache()
+    this.#cache = (cache) || new Cache()
     this.ttl = ttl
     this.logger = logger
     this.raceTime = raceTime
@@ -35,21 +35,21 @@ export default class DataBufferController {
     this.#intervalRef = setInterval(this.cleanUp.bind(this), this.ttl * 200)
   }
 
-  close() {
+  close () {
     this.logger.debug('Stopping DataBufferController')
     this.#items = null
     clearInterval(this.#intervalRef)
   }
 
-  set(key, value, ttl) {
-    return this.getBuffer(key).set(value, ttl)
+  set (key, value, ttl) {
+    return this.getBuffer(key).set(value, ttl | this.ttl)
   }
 
-  get(key) {
+  get (key) {
     return this.getBuffer(key).get()
   }
 
-  async cacheStart() {
+  async cacheStart () {
     this.#cache.on('connect', () => this.logger.debug('Cache is Connected'))
     this.#cache.on('ready', () => this.logger.debug('Cache is Ready'))
     this.#cache.on('error', (error) => {
@@ -72,11 +72,12 @@ export default class DataBufferController {
   }
 
   /**
-   * 
-   * @param {*} key 
-   * @returns {DataBuffer} 
+   * returns a DataBuffer, if it does not exists it will create one
+   *
+   * @param {string} key
+   * @returns {DataBuffer}
    */
-  getBuffer(key) {
+  getBuffer (key) {
     if (!this.#items[key]) {
       this.#items[key] = new DataBuffer({
         key,
@@ -87,5 +88,9 @@ export default class DataBufferController {
       })
     }
     return this.#items[key]
+  }
+
+  get size () {
+    return Object.keys(this.#items).length
   }
 }

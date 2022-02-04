@@ -1,4 +1,4 @@
-// Copyright 2021 Pon Holding
+// Copyright 2022 Pon Holding
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import Cache from "./Cache.js"
-import DataBuffer from "./DataBuffer.js"
-import DataBufferController from "./DataBufferController.js"
+import Cache from './Cache.js'
+import DataBuffer from './DataBuffer.js'
+import DataBufferController from './DataBufferController.js'
 
 export default DataBufferController
 export {

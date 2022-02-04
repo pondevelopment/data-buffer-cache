@@ -105,3 +105,4 @@ typings/
 .dccache
 test-report.xml
 test-reports/jest-junit.xml
+report/jscpd-report.json

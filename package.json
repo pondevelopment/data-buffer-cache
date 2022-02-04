@@ -20,7 +20,7 @@
     "lint": "ponstandard src",
     "lint:report": "ponstandard src | standard-reporter --json > report.json",
     "lint:fix": "ponstandard src --fix",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "test:watch": "jest src --watch",
     "coveralls": "jest && codecov && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "cpd": "node_modules/jscpd/bin/jscpd src",

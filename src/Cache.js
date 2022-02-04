@@ -1,4 +1,4 @@
-// Copyright 2021 Pon Holding
+// Copyright 2022 Pon Holding
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ export default class Cache {
     return key in this.#items
   }
 
-  async set (key, value, { EX }) {
+  async set (key, value) {
     this.#items[key] = value
     return true
   }

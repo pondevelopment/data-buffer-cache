@@ -6,7 +6,10 @@
   ],
   "ignore": [
     "**/__snapshots__/**",
-    "**/__fixtures__/**"
+    "**/__fixtures__/**",
+    "**/example.js",
+    "**/databuffer.unit.js",
+    "**/databuffercontroller.unit.js"
   ],
   "absolute": true,
   "gitignore": true
