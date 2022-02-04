@@ -35,20 +35,39 @@ export default class DataBufferController {
     this.#intervalRef = setInterval(this.cleanUp.bind(this), this.ttl * 200)
   }
 
+  // cleanup
   close () {
     this.logger.debug('Stopping DataBufferController')
     this.#items = null
     clearInterval(this.#intervalRef)
   }
 
+  /**
+   * Sets a key with a value to the cache
+   * 
+   * @param {string} key 
+   * @param {Object|Array} value 
+   * @param {number} ttl 
+   * @returns {any} - The result of the set function
+   */
   set (key, value, ttl) {
     return this.getBuffer(key).set(value, ttl | this.ttl)
   }
 
+  /**
+   * Gets the data belonging to the key.
+   * The Promise resolves to undefined if the data is not found, or the data expired.
+   * If that happens you can fetch the data from an external source and set it, 
+   * waiting processes will resolve when the data is set.
+   * 
+   * @param {string} key 
+   * @returns {Promise}
+   */
   get (key) {
     return this.getBuffer(key).get()
   }
 
+  // connect the cache and setup some catching
   async cacheStart () {
     this.#cache.on('connect', () => this.logger.debug('Cache is Connected'))
     this.#cache.on('ready', () => this.logger.debug('Cache is Ready'))
@@ -60,6 +79,7 @@ export default class DataBufferController {
     this.logger.debug('Cache is Setup')
   }
 
+  // expire caches that are overdue
   cleanUp () {
     this.logger.trace('Cleanup Caches')
     // collect caches that are expired
@@ -90,6 +110,7 @@ export default class DataBufferController {
     return this.#items[key]
   }
 
+  // returns the size of the cache, usefull for tests
   get size () {
     return Object.keys(this.#items).length
   }

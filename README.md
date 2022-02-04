@@ -33,6 +33,6 @@ await controller.set('test_multi', {data: 'Buffer'})
 
 console.log( await Promise.all(vals))
 
-controller.close()
+controller.close() // clean up
 
 ```
