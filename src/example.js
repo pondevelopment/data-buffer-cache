@@ -1,7 +1,3 @@
-# data-buffer-cache
-A way to buffer and cache data to minimize requests
-
-```javascript
 import DataBufferController from './DataBufferController.js'
 
 const controller = new DataBufferController(null, console )
@@ -34,5 +30,3 @@ await controller.set('test_multi', {data: 'Buffer'})
 console.log( await Promise.all(vals))
 
 controller.close()
-
-```
