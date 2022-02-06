@@ -14,32 +14,56 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Mock Cache Client, uses in memory cache
-export default class Cache {
+import EventEmitter from 'events'
+
+export default class Cache extends EventEmitter {
   #items = {}
 
+  /**
+   * Connects the cache
+   */
   async connect () {
-    return true
+    this.emit('connect', true)
+    this.emit('ready', true)
   }
 
+  /**
+   * Gets a value from the cache
+   * @param {string} key
+   * @returns {Promise}
+   */
   async get (key) {
     return this.#items[key]
   }
 
+  /**
+   * Checks if a values exists in the cache
+   * @param {string} key
+   * @returns {Promise}
+   */
   async exists (key) {
     return key in this.#items
   }
 
+  /**
+   * Sets a value in the cache
+   * @param {string} key
+   * @param {string} value
+   * @returns {Promise}
+   */
   async set (key, value) {
     this.#items[key] = value
     return true
   }
 
+  /**
+   * Deletes a value from the cache
+   *
+   * @param {string} key
+   * @returns {Promise}
+   */
   async del (key) {
     delete this.#items[key]
-    return true
-  }
-
-  on () {
     return true
   }
 }

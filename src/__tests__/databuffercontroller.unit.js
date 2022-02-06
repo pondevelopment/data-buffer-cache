@@ -15,6 +15,7 @@
 
 import { expect, describe, test, afterAll } from '@jest/globals'
 import DataBufferController from '../DataBufferController.js'
+import Cache from '../Cache.js'
 
 const logger = {
   trace: () => {},
@@ -23,11 +24,30 @@ const logger = {
   error: () => {}
 }
 
-const controller = new DataBufferController({ logger, ttl: 2 })
+const cache = new Cache()
+const controller = new DataBufferController({ logger, ttl: 2, cache })
 
 afterAll(() => controller.close())
 
 describe('Test the Controller', () => {
+  test('If the controller throws an error when the cache is not set', () => {
+    expect(() => new DataBufferController({ logger, ttl: 1 })).toThrow('Cache is not set.')
+  })
+
+  test.each([
+    [{ logger, cache }, { ttl: 300, raceTime: 30 }],
+    [{ logger, cache, ttl: 200 }, { ttl: 200, raceTime: 30 }],
+    [{ logger, cache, raceTime: 20 }, { ttl: 300, raceTime: 20 }],
+    [{ logger, cache, raceTime: 20, ttl: 200 }, { ttl: 200, raceTime: 20 }],
+    [{ cache }, { ttl: 300, raceTime: 30 }]
+  ])('Basic initialization', (params, expected) => {
+    const dbc = new DataBufferController(params)
+    expect(dbc.ttl).toEqual(expected.ttl)
+    expect(dbc.raceTime).toEqual(expected.raceTime)
+    expect(dbc.logger).toBeDefined()
+    dbc.close()
+  })
+
   test('The basic functionallity', async () => {
     const key = 'controller_test'
     const expected = await controller.get(key)
@@ -38,7 +58,7 @@ describe('Test the Controller', () => {
     expect(expected2).toEqual({ found: true })
   })
 
-  test('', async () => {
+  test('The sequential requests should be queued and waiting till the cache has been set', async () => {
     const key = 'test2'
     const list = [
       controller.get(key),

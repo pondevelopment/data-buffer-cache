@@ -7,7 +7,7 @@
   "ignore": [
     "**/__snapshots__/**",
     "**/__fixtures__/**",
-    "**/example.js",
+    "**/example/**",
     "**/databuffer.unit.js",
     "**/databuffercontroller.unit.js"
   ],

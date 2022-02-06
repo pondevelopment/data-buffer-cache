@@ -13,11 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import DataBufferController from './DataBufferController.js'
+import { createClient } from 'redis'
+import { DataBufferController } from '../index.js'
 
 const logger = console
+const cache = createClient() // redis
 
-const controller = new DataBufferController({ logger })
+const controller = new DataBufferController({ logger, cache })
 
 const val = await controller.get('test')
 logger.log('Should be undefined', val) // undefined

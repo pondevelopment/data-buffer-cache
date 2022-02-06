@@ -24,12 +24,56 @@ const logger = {
 }
 
 describe('Test the DataBuffer', () => {
+  test.each([
+    [{ key: '42', cache, logger }, { ttl: 300, raceTime: 30 }],
+    [{ key: '42', cache, logger, ttl: 200 }, { ttl: 200, raceTime: 30 }],
+    [{ key: '42', cache, logger, raceTime: 20 }, { ttl: 300, raceTime: 20 }],
+    [{ key: '42', cache, logger, raceTime: 20, ttl: 200 }, { ttl: 200, raceTime: 20 }],
+    [{ key: '42', cache }, { ttl: 300, raceTime: 30 }]
+  ])('Basic initialization', (params, expected) => {
+    const db = new DataBuffer(params)
+    expect(db.ttl).toEqual(expected.ttl)
+    expect(db.raceTime).toEqual(expected.raceTime)
+    expect(db.logger).toBeDefined()
+    db.cleanUp()
+  })
+
+  test('If the data is undefined, return undefined', async () => {
+    const undefinedCache = new Cache()
+    undefinedCache.get = async (key) => undefined
+    const buffer = new DataBuffer({ key: 'undefined', cache: undefinedCache, logger })
+
+    const expected1 = await buffer.waitForResponse()
+    expect(expected1).toBe(undefined)
+    expect(buffer.status).toBe('running')
+
+    const expected2 = buffer.waitForResponse()
+    await buffer.set({ found: true }) // set status to finished
+    expect(buffer.status).toBe('finished')
+    expect(expected2).resolves.toEqual(undefined)
+  })
+
+  test('If the data is not an object, reject with undefined', async () => {
+    const stringCache = new Cache()
+    stringCache.get = async (key) => 'string'
+    const buffer = new DataBuffer({ key: 'undefined', cache: stringCache, logger })
+
+    const expected1 = await buffer.waitForResponse()
+    expect(expected1).toBe(undefined)
+    expect(buffer.status).toBe('running')
+
+    const expected2 = buffer.waitForResponse()
+    await buffer.set({ found: true }) // set status to finished
+    expect(buffer.status).toBe('finished')
+    expect(expected2).resolves.toEqual(undefined)
+  })
+
   test.each(['test', 1, undefined, null])('Throw an error when set value is not an object', async (a) => {
     const buffer = new DataBuffer({ key: 'test', cache, logger })
     await expect(buffer.set(a)).rejects.toThrow('value should be an object')
   })
 
-  test('', async () => {
+  test('If the data has expired after te exist test, the get should respond with an undefined', async () => {
     const buffer = new DataBuffer({ key: 'test', cache, logger })
     await buffer.set({ found: true }) // set status to finished
     await cache.del('test') // delete the data

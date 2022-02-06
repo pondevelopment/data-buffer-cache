@@ -14,8 +14,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { expect, describe, test, jest } from '@jest/globals'
-import { EventEmitter } from 'events'
 import DataBufferController from '../DataBufferController.js'
+import Cache from '../Cache.js'
 
 const logger = {
   trace: () => {},
@@ -26,11 +26,12 @@ const logger = {
 
 describe('Test the Controller', () => {
   test('The timer should call the CacheClean function periodically', () => {
+    const cache = new Cache()
     jest.useFakeTimers('modern')
     jest.setSystemTime(new Date(2020, 12, 5, 20, 0, 0))
     const cleanSpy = jest.fn()
     const ttl = 2
-    const controller = new DataBufferController({ logger, ttl })
+    const controller = new DataBufferController({ logger, ttl, cache })
     controller.logger.trace = (txt) => cleanSpy(txt)
     expect(cleanSpy).toHaveBeenCalledTimes(0)
     expect(controller.size).toBe(0)
@@ -48,9 +49,7 @@ describe('Test the Controller', () => {
   })
 
   test('Test the Cache emitters', () => {
-    const cache = new EventEmitter()
-    cache.items = {}
-    cache.connect = async () => true
+    const cache = new Cache()
 
     const cleanSpy1 = jest.fn()
     const cleanSpy2 = jest.fn()
@@ -63,8 +62,6 @@ describe('Test the Controller', () => {
 
     const ttl = 2
     const controller = new DataBufferController({ logger: loggerSpy, cache, ttl, raceTime: 20 })
-    cache.emit('connect', 1)
-    cache.emit('ready', 1)
 
     expect(cleanSpy2).toHaveBeenCalledTimes(2)
     expect(cleanSpy2).toHaveBeenCalledWith('Cache is Connected')

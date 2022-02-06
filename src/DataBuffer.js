@@ -15,13 +15,6 @@
 
 import EventEmitter from 'events'
 
-/**
- * @typedef {Object} cache
- * @property {function} get
- * @property {function} set
- * @property {function} exists
- */
-
 export default class DataBuffer extends EventEmitter {
   #stdTTL
   #status = {
@@ -34,16 +27,18 @@ export default class DataBuffer extends EventEmitter {
   #currentStatus
   #cache
 
+  /* eslint-disable valid-jsdoc */
   /**
    * Initialize the DataBuffer
    *
+   * @constructor
    * @param {object} obj - Initialization of the class
    * @param {string} obj.key - The caching/buffer key
-   * @param {Cache} obj.cache - The cache object
+   * @param {import('./Cache.js').default} obj.cache - The cache object
    * @param {number} obj.ttl - Time To Live in seconds
    * @param {number} obj.raceTime - How long will the first request get before its been ignored in seconds
    * @param {*} obj.logger - A logger object, defaults to console
-   */
+   */ /* eslint-enable valid-jsdoc */
   constructor ({ key, cache, ttl = 300, raceTime = 30, logger = console }) {
     super()
     this.key = key
@@ -53,6 +48,18 @@ export default class DataBuffer extends EventEmitter {
     this.#cache = cache
     this.#currentStatus = this.#status.init
     this.logger = logger
+  }
+
+  get ttl () {
+    return this.#stdTTL
+  }
+
+  get raceTime () {
+    return this.#allowedRaceTimeMS / 1000
+  }
+
+  get status () {
+    return this.#currentStatus
   }
 
   setExpiry (ttl) {
@@ -68,7 +75,7 @@ export default class DataBuffer extends EventEmitter {
    * Return a promise that resolves with the data
    * or undefined when it was expired, not available or timed out
    *
-   * @returns {Promise|undefined}
+   * @returns {Promise<undefined|object|Array>}
    */
   async get () {
     try {
@@ -85,7 +92,7 @@ export default class DataBuffer extends EventEmitter {
    * @param {object} value - The object to put in the cache
    * @param {number} ttl - Time To Live for the cache object in seconds
    *
-   * @returns {*} - The result of the Cache set Method
+   * @returns {Promise} - The result of the Cache set Method
    */
   async set (value, ttl = this.#stdTTL) {
     if (!value || (value.constructor !== Object && value.constructor !== Array)) {
@@ -99,6 +106,10 @@ export default class DataBuffer extends EventEmitter {
     return result
   }
 
+  /**
+   * Returns a response based on the current status of the this object
+   * @returns {Promise<undefined|object|Array>}
+   */
   async waitForResponse () {
     // the status is on init, set the status to running and let the first call set the value
     if (this.#currentStatus === this.#status.init) {
@@ -128,11 +139,18 @@ export default class DataBuffer extends EventEmitter {
 
         if (data === undefined) resolve(undefined)
 
-        resolve(JSON.parse(data))
+        try {
+          resolve(JSON.parse(data))
+        } catch {
+          resolve(undefined)
+        }
       })
     }) // subscribe as observer; send response when request is finished
 
+    // just wait for a few seconds and return undefined
     const p2 = new Promise((resolve) => setTimeout(() => resolve(undefined), this.#allowedRaceTimeMS))
+
+    // return who's done first
     return Promise.race([p1, p2])
   }
 }

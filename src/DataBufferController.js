@@ -14,19 +14,41 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import DataBuffer from './DataBuffer.js'
-import Cache from './Cache.js'
+
+/**
+ * A Logger definition
+ * @typedef {Object} Logger
+ * @property {function(txt):void} info - log info information
+ * @property {function(txt):void} debug - log debug information
+ * @property {function(txt):void} trace - log trace information
+ * @property {function(txt):void} warn - log warn information
+ * @property {function(txt):void} error - log error information
+ */
 
 export default class DataBufferController {
   #items
   #cache
   #intervalRef
 
-  constructor ({ cache = null, logger = console, ttl = 300, raceTime = 30 }) {
+  /* eslint-disable valid-jsdoc */
+  /**
+   * Setup the Controller
+   *
+   * @param {object} obj
+   * @param {import('./Cache.js').default} obj.cache -  A Cache object
+   * @param {Logger} obj.logger -  A Logger object
+   * @param {number} obj.ttl -  Time To Live in seconds
+   * @param {number} obj.raceTime -  How long a request can be queued, before it is ignored and retried in seconds
+   * @throws {Error} When the cache is not set
+   */ /* eslint-enable valid-jsdoc */
+  constructor ({ cache, logger = console, ttl = 300, raceTime = 30 }) {
     this.#items = {}
-    this.#cache = (cache) || new Cache()
     this.ttl = ttl
     this.logger = logger
     this.raceTime = raceTime
+
+    if (!cache) throw new Error('Cache is not set.')
+    this.#cache = cache
 
     // start the cache
     this.cacheStart()
@@ -44,10 +66,10 @@ export default class DataBufferController {
 
   /**
    * Sets a key with a value to the cache
-   * 
-   * @param {string} key 
-   * @param {Object|Array} value 
-   * @param {number} ttl 
+   *
+   * @param {string} key
+   * @param {object|array} value
+   * @param {number} ttl
    * @returns {any} - The result of the set function
    */
   set (key, value, ttl) {
@@ -57,10 +79,10 @@ export default class DataBufferController {
   /**
    * Gets the data belonging to the key.
    * The Promise resolves to undefined if the data is not found, or the data expired.
-   * If that happens you can fetch the data from an external source and set it, 
+   * If that happens you can fetch the data from an external source and set it,
    * waiting processes will resolve when the data is set.
-   * 
-   * @param {string} key 
+   *
+   * @param {string} key
    * @returns {Promise}
    */
   get (key) {
