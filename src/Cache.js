@@ -28,18 +28,40 @@ export default class Cache extends EventEmitter {
   }
 
   /**
+   * Disconnect gracefully
+   */
+  async quit () {
+    this.emit('end')
+    return 'OK'
+  }
+
+  /**
+   * Disconnect forcefully
+   */
+  async disconnect () {
+    this.emit('end')
+  }
+
+  /**
    * Gets a value from the cache
+   *
+   * returns null if the key does not exist
+   *
    * @param {string} key
-   * @returns {Promise}
+   * @returns {Promise<null|string>}
    */
   async get (key) {
-    return this.#items[key]
+    const exists = await this.exists(key)
+    if (exists === true) {
+      return this.#items[key]
+    }
+    return null
   }
 
   /**
    * Checks if a values exists in the cache
    * @param {string} key
-   * @returns {Promise}
+   * @returns {Promise<boolean>}
    */
   async exists (key) {
     return key in this.#items
@@ -49,7 +71,7 @@ export default class Cache extends EventEmitter {
    * Sets a value in the cache
    * @param {string} key
    * @param {string} value
-   * @returns {Promise}
+   * @returns {Promise<boolean>}
    */
   async set (key, value) {
     this.#items[key] = value
@@ -60,10 +82,14 @@ export default class Cache extends EventEmitter {
    * Deletes a value from the cache
    *
    * @param {string} key
-   * @returns {Promise}
+   * @returns {Promise<boolean>}
    */
   async del (key) {
-    delete this.#items[key]
-    return true
+    const exists = await this.exists(key)
+    if (exists === true) {
+      delete this.#items[key]
+      return true
+    }
+    return false
   }
 }

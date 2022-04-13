@@ -15,6 +15,11 @@
 
 import EventEmitter from 'events'
 
+/**
+ * A Cache definition
+ * @typedef {import('./Cache.js').default} Cache
+ */
+
 export default class DataBuffer extends EventEmitter {
   #stdTTL
   #status = {
@@ -23,31 +28,32 @@ export default class DataBuffer extends EventEmitter {
     finished: 'finished'
   }
 
-  #allowedRaceTimeMS
+  #allowedRaceTimeMs
   #currentStatus
   #cache
 
-  /* eslint-disable valid-jsdoc */
   /**
    * Initialize the DataBuffer
    *
    * @constructor
    * @param {object} obj - Initialization of the class
    * @param {string} obj.key - The caching/buffer key
-   * @param {import('./Cache.js').default} obj.cache - The cache object
+   * @param {Cache} obj.cache - The cache object
    * @param {number} obj.ttl - Time To Live in seconds
-   * @param {number} obj.raceTime - How long will the first request get before its been ignored in seconds
+   * @param {number} obj.raceTime - How long will the first request get before its been ignored in milli-seconds
    * @param {*} obj.logger - A logger object, defaults to console
-   */ /* eslint-enable valid-jsdoc */
-  constructor ({ key, cache, ttl = 300, raceTime = 30, logger = console }) {
+   */
+  constructor ({ key, cache, ttl = 300, raceTime = 30000, logger = console }) {
     super()
     this.key = key
-    this.#allowedRaceTimeMS = raceTime * 1000
-    this.#stdTTL = ttl // standard 5 minute availability
+    this.logger = logger
+
+    this.#allowedRaceTimeMs = raceTime
+    this.#stdTTL = ttl // standard 5 minute availability (300s)
     this.setExpiry()
+
     this.#cache = cache
     this.#currentStatus = this.#status.init
-    this.logger = logger
   }
 
   get ttl () {
@@ -55,15 +61,24 @@ export default class DataBuffer extends EventEmitter {
   }
 
   get raceTime () {
-    return this.#allowedRaceTimeMS / 1000
+    return this.#allowedRaceTimeMs
+  }
+
+  get raceTimeInSeconds () {
+    return this.#allowedRaceTimeMs / 1000
   }
 
   get status () {
     return this.#currentStatus
   }
 
-  setExpiry (ttl) {
-    this.expire = Date.now() + (ttl || this.#stdTTL * 1000)
+  /**
+   * Set the expiry
+   *
+   * @param {number} ttl expiry in seconds
+   */
+  setExpiry (ttl = this.#stdTTL) {
+    this.expire = Date.now() + (ttl * 1000)
   }
 
   cleanUp () {
@@ -121,7 +136,8 @@ export default class DataBuffer extends EventEmitter {
     if (this.#currentStatus === this.#status.finished) {
       const data = await this.#cache.get(this.key)
 
-      // it is possible that the cache is expired between exists and the get
+      // it is possible that the cache is expired between exists call and the get call
+      // if that happens restart the process
       if (data === undefined || data === null) {
         this.#currentStatus = this.#status.running
         return undefined
@@ -133,24 +149,28 @@ export default class DataBuffer extends EventEmitter {
 
     // the status is running, so we wait until the cache gets set
     // or till we waited long enough
-    const p1 = new Promise((resolve) => {
+    const dataPromise = new Promise((resolve) => {
       this.once(this.#status.finished, async () => {
         const data = await this.#cache.get(this.key)
 
-        if (data === undefined) resolve(undefined)
+        if (data === undefined) {
+          resolve(undefined)
+        }
 
+        // this should not happen, but if you for some reason cannot parse the data
+        // return undefined and try again.
         try {
           resolve(JSON.parse(data))
         } catch {
           resolve(undefined)
         }
       })
-    }) // subscribe as observer; send response when request is finished
+    })
 
-    // just wait for a few seconds and return undefined
-    const p2 = new Promise((resolve) => setTimeout(() => resolve(undefined), this.#allowedRaceTimeMS))
+    // create a Promise that returns undefined after the allowedRaceTime
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(undefined), this.#allowedRaceTimeMs))
 
     // return who's done first
-    return Promise.race([p1, p2])
+    return Promise.race([dataPromise, timeoutPromise])
   }
 }

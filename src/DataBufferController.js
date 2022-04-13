@@ -25,41 +25,48 @@ import DataBuffer from './DataBuffer.js'
  * @property {function(txt):void} error - log error information
  */
 
+/**
+ * A Cache definition
+ * @typedef {import('./Cache.js').default} Cache
+ */
+
 export default class DataBufferController {
   #items
   #cache
   #intervalRef
 
-  /* eslint-disable valid-jsdoc */
   /**
    * Setup the Controller
    *
    * @param {object} obj
-   * @param {import('./Cache.js').default} obj.cache -  A Cache object
+   * @param {Cache} obj.cache -  A Cache object
    * @param {Logger} obj.logger -  A Logger object
    * @param {number} obj.ttl -  Time To Live in seconds
-   * @param {number} obj.raceTime -  How long a request can be queued, before it is ignored and retried in seconds
+   * @param {number} obj.raceTime -  How long a request can be queued, before it is ignored and retried in milli-seconds
    * @throws {Error} When the cache is not set
-   */ /* eslint-enable valid-jsdoc */
-  constructor ({ cache, logger = console, ttl = 300, raceTime = 30 }) {
+   */
+  constructor ({ cache, logger = console, ttl = 300, raceTime = 30000 }) {
     this.#items = {}
     this.ttl = ttl
     this.logger = logger
     this.raceTime = raceTime
 
-    if (!cache) throw new Error('Cache is not set.')
+    if (!cache) {
+      throw new Error('Cache is not provided.')
+    }
     this.#cache = cache
 
     // start the cache
     this.cacheStart()
 
     // remove expired caches, call every 1/5 of the stdTTL
-    this.#intervalRef = setInterval(this.cleanUp.bind(this), this.ttl * 200)
+    this.#intervalRef = setInterval(this.cacheCleaning.bind(this), this.ttl * 200)
   }
 
   // cleanup
-  close () {
+  async close () {
     this.logger.debug('Stopping DataBufferController')
+    this.#cache.quit()
     this.#items = null
     clearInterval(this.#intervalRef)
   }
@@ -97,12 +104,13 @@ export default class DataBufferController {
       this.logger.error('CACHE ERROR')
       return this.logger.error(error)
     })
+    this.#cache.on('end', () => this.logger.debug('Cache connection is closed'))
     await this.#cache.connect()
     this.logger.debug('Cache is Setup')
   }
 
   // expire caches that are overdue
-  cleanUp () {
+  cacheCleaning () {
     this.logger.trace('Cleanup Caches')
     // collect caches that are expired
     const removals = Object.values(this.#items).filter(dataBuffer => dataBuffer.expire < Date.now())

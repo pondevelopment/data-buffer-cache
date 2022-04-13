@@ -4,7 +4,7 @@
   "description": "Prevent bulk requests to your backend, buffer and cache simultaneous requests.",
   "type": "module",
   "main": "src/index.js",
-  "license": "GPL-3",
+  "license": "GPL-3.0",
   "files": [
     "src/index.js",
     "src/Cache.js",
@@ -54,7 +54,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.14.0",
     "@babel/preset-env": "^7.12.10",
     "@jest/globals": "^27.0.6",
-    "@ponbike/ponstandard": "^0.3.0",
+    "@pondevelopment/ponstandard": "^1.0.0",
     "babel-jest": "^27.0.6",
     "codecov": "^3.8.1",
     "coveralls": "^3.1.0",
@@ -65,13 +65,12 @@
     "jest-sonar-reporter": "^2.0.0",
     "jscpd": "^3.3.26",
     "prettier": "^2.2.0",
-    "redis": "^4.0.3",
+    "redis": "^4.0.6",
     "standard": "^16.0.3",
-    "standard-reporter": "^1.0.5",
-    "supertest": "^6.0.1"
+    "standard-reporter": "^1.0.5"
   },
   "engines": {
-    "node": ">= 14"
+    "node": ">= 16.14"
   },
   "ponstandard": {
     "parser": "@babel/eslint-parser",

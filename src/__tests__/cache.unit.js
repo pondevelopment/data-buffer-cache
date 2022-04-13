@@ -13,17 +13,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { expect, describe, test } from '@jest/globals'
+import { expect, describe, test, jest } from '@jest/globals'
 import Cache from '../Cache.js'
 
-const cache = new Cache()
-
 describe('Test the cache mock', () => {
+  const cache = new Cache()
+
   test('Set and get the cache', async () => {
     const data = { a: 'b' }
     await cache.set('1', data)
     const expected = await cache.get('1')
     expect(expected).toEqual(data)
+  })
+
+  test('Get unkown key from the cache', async () => {
+    const expected = await cache.get('5')
+    expect(expected).toEqual(null)
   })
 
   test('Test if the cache key exists', async () => {
@@ -43,5 +48,38 @@ describe('Test the cache mock', () => {
     await cache.del('3')
     const expected3del = await cache.exists('3')
     expect(expected3del).toEqual(false)
+  })
+
+  test('Test if an unkown cache key can be deleted', async () => {
+    const expecting = await cache.del('unkown')
+    expect(expecting).toEqual(false)
+  })
+})
+
+describe('Test the cache mock emitter', () => {
+  const cache = new Cache()
+
+  test('Event handler', async () => {
+    const connectSpy = jest.fn()
+    const readySpy = jest.fn()
+    const endSpy = jest.fn()
+
+    cache.on('connect', connectSpy)
+    cache.on('ready', readySpy)
+    cache.on('end', endSpy)
+
+    await cache.connect()
+    await cache.quit()
+
+    expect(connectSpy).toHaveBeenCalledTimes(1)
+    expect(readySpy).toHaveBeenCalledTimes(1)
+    expect(endSpy).toHaveBeenCalledTimes(1)
+
+    await cache.connect()
+    await cache.disconnect()
+
+    expect(connectSpy).toHaveBeenCalledTimes(2)
+    expect(readySpy).toHaveBeenCalledTimes(2)
+    expect(endSpy).toHaveBeenCalledTimes(2)
   })
 })

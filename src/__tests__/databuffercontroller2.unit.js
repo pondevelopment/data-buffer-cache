@@ -71,6 +71,7 @@ describe('Test the Controller', () => {
     expect(cleanSpy1).toHaveBeenCalledWith('CACHE ERROR')
     expect(cleanSpy1).toHaveBeenLastCalledWith('Emitted Error')
     controller.close()
-    expect(cleanSpy2).toHaveBeenLastCalledWith('Stopping DataBufferController')
+    expect(cleanSpy2).toHaveBeenCalledWith('Stopping DataBufferController')
+    expect(cleanSpy2).toHaveBeenLastCalledWith('Cache connection is closed')
   })
 })

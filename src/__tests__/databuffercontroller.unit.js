@@ -31,15 +31,15 @@ afterAll(() => controller.close())
 
 describe('Test the Controller', () => {
   test('If the controller throws an error when the cache is not set', () => {
-    expect(() => new DataBufferController({ logger, ttl: 1 })).toThrow('Cache is not set.')
+    expect(() => new DataBufferController({ logger, ttl: 1 })).toThrow('Cache is not provided.')
   })
 
   test.each([
-    [{ logger, cache }, { ttl: 300, raceTime: 30 }],
-    [{ logger, cache, ttl: 200 }, { ttl: 200, raceTime: 30 }],
+    [{ logger, cache }, { ttl: 300, raceTime: 30000 }],
+    [{ logger, cache, ttl: 200 }, { ttl: 200, raceTime: 30000 }],
     [{ logger, cache, raceTime: 20 }, { ttl: 300, raceTime: 20 }],
     [{ logger, cache, raceTime: 20, ttl: 200 }, { ttl: 200, raceTime: 20 }],
-    [{ cache }, { ttl: 300, raceTime: 30 }]
+    [{ cache }, { ttl: 300, raceTime: 30000 }]
   ])('Basic initialization', (params, expected) => {
     const dbc = new DataBufferController(params)
     expect(dbc.ttl).toEqual(expected.ttl)
