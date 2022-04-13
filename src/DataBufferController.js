@@ -66,7 +66,7 @@ export default class DataBufferController {
   // cleanup
   async close () {
     this.logger.debug('Stopping DataBufferController')
-    this.#cache.quit()
+    await this.#cache.quit()
     this.#items = null
     clearInterval(this.#intervalRef)
   }
