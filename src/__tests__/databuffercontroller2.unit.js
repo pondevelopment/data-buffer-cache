@@ -34,17 +34,17 @@ describe('Test the Controller', () => {
     const controller = new DataBufferController({ logger, ttl, cache })
     controller.logger.trace = (txt) => cleanSpy(txt)
     expect(cleanSpy).toHaveBeenCalledTimes(0)
-    expect(controller.size).toBe(0)
+    expect(controller.amountOfCachedKeys).toBe(0)
     jest.advanceTimersByTime(ttl * 200 * 2)
     expect(cleanSpy).toHaveBeenCalledTimes(2)
     expect(cleanSpy).toHaveBeenLastCalledWith('Cleanup Caches')
 
     controller.get('test1')
-    expect(controller.size).toBe(1)
+    expect(controller.amountOfCachedKeys).toBe(1)
     controller.set('test1', { test: true })
     jest.setSystemTime(new Date(2020, 12, 5, 20, 10, 1))
     jest.advanceTimersByTime(ttl * 200 * 2)
-    expect(controller.size).toBe(0)
+    expect(controller.amountOfCachedKeys).toBe(0)
     controller.close()
   })
 
@@ -61,7 +61,7 @@ describe('Test the Controller', () => {
     }
 
     const ttl = 2
-    const controller = new DataBufferController({ logger: loggerSpy, cache, ttl, raceTime: 20 })
+    const controller = new DataBufferController({ logger: loggerSpy, cache, ttl, raceTimeMs: 20 })
 
     expect(cleanSpy2).toHaveBeenCalledTimes(2)
     expect(cleanSpy2).toHaveBeenCalledWith('Cache is Connected')

@@ -1,5 +1,10 @@
 # data-buffer-cache
-A way to buffer and cache data to minimize requests
+A way to buffer and cache data to minimize requests to a backend.
+Reduce the amount of requests that are being made to a backend if the cache key is not found in the cache. 
+
+The first request is responsible for setting the cache with the correct data. The sequential requests are waiting for it to be set. 
+
+More examples in the src/example directory
 
 ```javascript
 import DataBufferController from './DataBufferController.js'

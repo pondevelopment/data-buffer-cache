@@ -35,11 +35,11 @@ describe('Test the Controller', () => {
   })
 
   test.each([
-    [{ logger, cache }, { ttl: 300, raceTime: 30000 }],
-    [{ logger, cache, ttl: 200 }, { ttl: 200, raceTime: 30000 }],
-    [{ logger, cache, raceTime: 20 }, { ttl: 300, raceTime: 20 }],
-    [{ logger, cache, raceTime: 20, ttl: 200 }, { ttl: 200, raceTime: 20 }],
-    [{ cache }, { ttl: 300, raceTime: 30000 }]
+    [{ logger, cache }, { ttl: 300, raceTimeMs: 30000 }],
+    [{ logger, cache, ttl: 200 }, { ttl: 200, raceTimeMs: 30000 }],
+    [{ logger, cache, raceTimeMs: 20 }, { ttl: 300, raceTimeMs: 20 }],
+    [{ logger, cache, raceTimeMs: 20, ttl: 200 }, { ttl: 200, raceTimeMs: 20 }],
+    [{ cache }, { ttl: 300, raceTimeMs: 30000 }]
   ])('Basic initialization', (params, expected) => {
     const dbc = new DataBufferController(params)
     expect(dbc.ttl).toEqual(expected.ttl)
