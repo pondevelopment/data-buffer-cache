@@ -40,10 +40,10 @@ export default class DataBufferController {
    * Setup the Controller
    *
    * @param {object} obj
-   * @param {Cache} obj.cache -  A Cache object
-   * @param {Logger} obj.logger -  A Logger object
-   * @param {number} obj.ttl -  Time To Live in seconds
-   * @param {number} obj.raceTimeMs -  How long a request can be queued, before it is ignored and retried in milli-seconds
+   * @param {Cache} obj.cache A Cache object
+   * @param {Logger} obj.logger A Logger object
+   * @param {number} obj.ttl Time To Live in seconds
+   * @param {number} obj.raceTimeMs How long a request can be queued, before it is ignored and retried in milli-seconds
    * @throws {Error} When the cache is not set
    */
   constructor ({ cache, logger = console, ttl = 300, raceTimeMs = 30000 }) {
