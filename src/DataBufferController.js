@@ -56,9 +56,6 @@ export default class DataBufferController {
     }
     this.#cache = cache
 
-    // start the cache
-    this.cacheStart()
-
     // remove expired caches, call every 1/5 of the stdTTL
     this.#intervalRef = setInterval(this.cacheCleaning.bind(this), this.ttl * 200)
   }
@@ -66,9 +63,10 @@ export default class DataBufferController {
   // cleanup
   async close () {
     this.logger.debug('Stopping DataBufferController')
-    await this.#cache.quit()
-    this.#items = null
     clearInterval(this.#intervalRef)
+    await this.#cache.quit()
+    Object.values(this.#items).forEach(dataBuffer => dataBuffer.close())
+    this.#items = null
   }
 
   /**
@@ -93,7 +91,7 @@ export default class DataBufferController {
    * @returns {Promise}
    */
   get (key) {
-    return this.getBuffer(key).get()
+      return this.getBuffer(key).get()
   }
 
   // connect the cache and setup some catching
@@ -143,5 +141,16 @@ export default class DataBufferController {
   // returns the size of the cache, usefull for tests
   get size () {
     return Object.keys(this.#items).length
+  }
+  // returns the statusus of the cache, usefull for tests
+  get bufferStatus () {
+    return Object.values(this.#items).map(dataBuffer => dataBuffer.status)
+  }
+
+  static async create(data) {
+    const dbc = new DataBufferController(data)
+    // start the cache
+    await dbc.cacheStart()
+    return dbc
   }
 }

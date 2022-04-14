@@ -19,7 +19,7 @@ import { DataBufferController } from '../index.js'
 const logger = console
 const cache = createClient() // redis
 
-const controller = new DataBufferController({ logger, cache })
+const controller = await DataBufferController.create({ logger, cache })
 
 const val = await controller.get('test')
 logger.log('Should be undefined', val) // undefined
