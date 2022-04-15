@@ -46,4 +46,4 @@ await controller.set('test_multi', { data: 'Buffer' })
 
 logger.log(await Promise.all(vals))
 
-controller.close()
+await controller.close()

@@ -23,7 +23,9 @@ list.push(controllerB.get(key))
 await new Promise(resolve => setTimeout(resolve, 5000))
 
 controllerA.set(key, { found: 42 })
+
 Promise.all(list).then(res => {
+  logger.info(res)
   controllerA.close()
   controllerB.close()
 })
