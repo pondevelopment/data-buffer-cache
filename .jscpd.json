@@ -1,0 +1,16 @@
+{
+  "threshold": 3,
+  "reporters": [
+    "json",
+    "console"
+  ],
+  "ignore": [
+    "**/__snapshots__/**",
+    "**/__fixtures__/**",
+    "**/example/**",
+    "**/databuffer.unit.js",
+    "**/databuffercontroller.unit.js"
+  ],
+  "absolute": true,
+  "gitignore": true
+}
