@@ -25,8 +25,6 @@ import DataBuffer from './DataBuffer.js'
  * @property {function(txt):void} error - log error information
  */
 
-
-
 /**
  * A Cache definition
  * @typedef {import('./Cache.js').default} Cache
