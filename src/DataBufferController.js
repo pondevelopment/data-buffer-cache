@@ -34,22 +34,23 @@ export default class DataBufferController {
   #items
   #cache
   #intervalRef
+  #fifthSecondInMs = 200
 
   /**
    * Setup the Controller
    *
    * @param {object} obj
-   * @param {Cache} obj.cache -  A Cache object
-   * @param {Logger} obj.logger -  A Logger object
-   * @param {number} obj.ttl -  Time To Live in seconds
-   * @param {number} obj.raceTime -  How long a request can be queued, before it is ignored and retried in milli-seconds
+   * @param {Cache} obj.cache A Cache object
+   * @param {Logger} obj.logger A Logger object
+   * @param {number} obj.ttl Time To Live in seconds
+   * @param {number} obj.raceTimeMs How long a request can be queued, before it is ignored and retried in milli-seconds
    * @throws {Error} When the cache is not set
    */
-  constructor ({ cache, logger = console, ttl = 300, raceTime = 30000 }) {
+  constructor ({ cache, logger = console, ttl = 300, raceTimeMs = 30000 }) {
     this.#items = {}
     this.ttl = ttl
     this.logger = logger
-    this.raceTime = raceTime
+    this.raceTimeMs = raceTimeMs
 
     if (!cache) {
       throw new Error('Cache is not provided.')
@@ -57,7 +58,7 @@ export default class DataBufferController {
     this.#cache = cache
 
     // remove expired caches, call every 1/5 of the stdTTL
-    this.#intervalRef = setInterval(this.cacheCleaning.bind(this), this.ttl * 200)
+    this.#intervalRef = setInterval(this.cacheCleaning.bind(this), this.ttl * this.#fifthSecondInMs)
   }
 
   // cleanup
@@ -110,8 +111,9 @@ export default class DataBufferController {
   // expire caches that are overdue
   cacheCleaning () {
     this.logger.trace('Cleanup Caches')
+    const now = Date.now()
     // collect caches that are expired
-    const removals = Object.values(this.#items).filter(dataBuffer => dataBuffer.expire < Date.now())
+    const removals = Object.values(this.#items).filter(dataBuffer => dataBuffer.expire < now)
     removals.forEach(dataBuffer => {
       dataBuffer.cleanUp()
       delete this.#items[dataBuffer.key]
@@ -131,15 +133,15 @@ export default class DataBufferController {
         key,
         cache: this.#cache,
         ttl: this.ttl,
-        raceTime: this.raceTime,
+        raceTimeMs: this.raceTimeMs,
         logger: this.logger
       })
     }
     return this.#items[key]
   }
 
-  // returns the size of the cache, usefull for tests
-  get size () {
+  // returns the amount of the cached keys, usefull for tests
+  get amountOfCachedKeys () {
     return Object.keys(this.#items).length
   }
   // returns the statusus of the cache, usefull for tests

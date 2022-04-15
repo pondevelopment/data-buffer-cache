@@ -45,15 +45,15 @@ export default class DataBuffer extends EventEmitter {
    * @param {string} obj.key - The caching/buffer key
    * @param {Cache} obj.cache - The cache object
    * @param {number} obj.ttl - Time To Live in seconds
-   * @param {number} obj.raceTime - How long will the first request get before its been ignored in milli-seconds
+   * @param {number} obj.raceTimeMs - How long will the first request get before its been ignored in milli-seconds
    * @param {*} obj.logger - A logger object, defaults to console
    */
-  constructor ({ key, cache, ttl = 300, raceTime = 30000, logger = console }) {
+  constructor ({ key, cache, ttl = 300, raceTimeMs = 30000, logger = console }) {
     super()
     this.key = key
     this.logger = logger
 
-    this.#allowedRaceTimeMs = raceTime
+    this.#allowedRaceTimeMs = raceTimeMs
     this.#stdTTL = ttl // standard 5 minute availability (300s)
     this.setExpiry()
 

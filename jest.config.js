@@ -3,8 +3,6 @@ export default {
 
   transform: { '^.+\\.js?$': 'babel-jest' },
 
-  transformIgnorePatterns: ['node_modules/(?!(@hckrnews|@ponbike)/)'],
-
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
   },

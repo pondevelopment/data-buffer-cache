@@ -25,16 +25,16 @@ const logger = {
 
 describe('Test the DataBuffer', () => {
   test.each([
-    [{ key: '42', cache, logger }, { ttl: 300, raceTime: 30000 }],
-    [{ key: '42', cache, logger, ttl: 200 }, { ttl: 200, raceTime: 30000 }],
-    [{ key: '42', cache, logger, raceTime: 20 }, { ttl: 300, raceTime: 20 }],
-    [{ key: '42', cache, logger, raceTime: 20, ttl: 200 }, { ttl: 200, raceTime: 20 }],
-    [{ key: '42', cache }, { ttl: 300, raceTime: 30000 }]
+    [{ key: '42', cache, logger }, { ttl: 300, raceTimeMs: 30000 }],
+    [{ key: '42', cache, logger, ttl: 200 }, { ttl: 200, raceTimeMs: 30000 }],
+    [{ key: '42', cache, logger, raceTimeMs: 20 }, { ttl: 300, raceTimeMs: 20 }],
+    [{ key: '42', cache, logger, raceTimeMs: 20, ttl: 200 }, { ttl: 200, raceTimeMs: 20 }],
+    [{ key: '42', cache }, { ttl: 300, raceTimeMs: 30000 }]
   ])('Basic initialization', (params, expected) => {
     const db = new DataBuffer(params)
     expect(db.ttl).toEqual(expected.ttl)
-    expect(db.raceTime).toEqual(expected.raceTime)
-    expect(db.raceTimeInSeconds).toEqual(expected.raceTime / 1000)
+    expect(db.raceTime).toEqual(expected.raceTimeMs)
+    expect(db.raceTimeInSeconds).toEqual(expected.raceTimeMs / 1000)
     expect(db.logger).toBeDefined()
     db.cleanUp()
   })
