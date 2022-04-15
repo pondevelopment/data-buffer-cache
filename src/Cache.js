@@ -92,8 +92,4 @@ export default class Cache extends EventEmitter {
     }
     return false
   }
-
-  get items () {
-    return this.#items
-  }
 }

@@ -61,7 +61,7 @@ export default class DataBuffer extends EventEmitter {
     this.#currentStatus = this.#status.init
   }
 
-  close() {
+  close () {
     this.logger.debug('Closing DataBuffer')
     this.removeAllListeners()
     this.#closing = true
@@ -71,7 +71,7 @@ export default class DataBuffer extends EventEmitter {
     return this.#stdTTL
   }
 
-  get raceTime () {
+  get raceTimeMs () {
     return this.#allowedRaceTimeMs
   }
 
@@ -111,7 +111,7 @@ export default class DataBuffer extends EventEmitter {
       }
     } catch (e) { }
 
-    if(this.#currentStatus === this.#status.init) {
+    if (this.#currentStatus === this.#status.init) {
       this.#cache.set(this.key, this.#semaphore)
     }
 
@@ -135,12 +135,12 @@ export default class DataBuffer extends EventEmitter {
     return result
   }
 
-  async checkSemaphore() {
+  async checkSemaphore () {
     this.#semaphoreChecking = true
-    await new Promise(resolve => setTimeout(resolve, this.#allowedRaceTimeMs/10))
+    await new Promise(resolve => setTimeout(resolve, this.#allowedRaceTimeMs / 10))
     this.logger.debug('checking semaphore')
     const data = await this.#cache.get(this.key)
-    if( data !== this.#semaphore ) {
+    if (data !== this.#semaphore) {
       this.logger.debug('semaphore is replaced with real data!')
       this.triggerItemSet()
       this.#semaphoreChecking = false
@@ -150,7 +150,7 @@ export default class DataBuffer extends EventEmitter {
     return this.checkSemaphore()
   }
 
-  triggerItemSet(ttl = this.#stdTTL) {
+  triggerItemSet (ttl = this.#stdTTL) {
     this.#currentStatus = this.#status.finished
     this.setExpiry(ttl) // reset expiry
     this.emit(this.#status.finished) // notify all observers waiting for this request
@@ -160,7 +160,7 @@ export default class DataBuffer extends EventEmitter {
    * Returns a response based on the current status of the this object
    * @returns {Promise<undefined|object|Array>}
    */
-  async waitForResponse () { 
+  async waitForResponse () {
     // the status is on init, set the status to running and let the first call set the value
     if (this.#currentStatus === this.#status.init) {
       this.#currentStatus = this.#status.running
@@ -175,7 +175,7 @@ export default class DataBuffer extends EventEmitter {
         this.#currentStatus = this.#status.running
         this.#foundSemaphore = true
         this.logger.debug('Semaphore found')
-        if(this.#semaphoreChecking === false ) this.checkSemaphore()
+        if (this.#semaphoreChecking === false) this.checkSemaphore()
         return this.waitForResponse()
       }
 
@@ -188,10 +188,6 @@ export default class DataBuffer extends EventEmitter {
 
       this.logger.debug(`Cache hit for key: ${this.key}`)
       return JSON.parse(data)
-    }
-
-    if ( this.#foundSemaphore ) {
-      const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
     }
 
     // the status is running, so we wait until the cache gets set

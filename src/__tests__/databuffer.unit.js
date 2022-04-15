@@ -33,7 +33,7 @@ describe('Test the DataBuffer', () => {
   ])('Basic initialization', (params, expected) => {
     const db = new DataBuffer(params)
     expect(db.ttl).toEqual(expected.ttl)
-    expect(db.raceTime).toEqual(expected.raceTimeMs)
+    expect(db.raceTimeMs).toEqual(expected.raceTimeMs)
     expect(db.raceTimeInSeconds).toEqual(expected.raceTimeMs / 1000)
     expect(db.logger).toBeDefined()
     db.cleanUp()

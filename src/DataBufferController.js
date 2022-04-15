@@ -25,9 +25,20 @@ import DataBuffer from './DataBuffer.js'
  * @property {function(txt):void} error - log error information
  */
 
+
+
 /**
  * A Cache definition
  * @typedef {import('./Cache.js').default} Cache
+ */
+
+/**
+ * A DataBufferController Object
+ * @typedef {Object} DataBufferControllerObject
+ * @property {Cache} cache A Cache object
+ * @property {Logger} logger A Logger object
+ * @property {number} ttl Time To Live in seconds
+ * @property {number} raceTimeMs How long a request can be queued, before it is ignored and retried in milli-seconds
  */
 
 export default class DataBufferController {
@@ -39,11 +50,7 @@ export default class DataBufferController {
   /**
    * Setup the Controller
    *
-   * @param {object} obj
-   * @param {Cache} obj.cache A Cache object
-   * @param {Logger} obj.logger A Logger object
-   * @param {number} obj.ttl Time To Live in seconds
-   * @param {number} obj.raceTimeMs How long a request can be queued, before it is ignored and retried in milli-seconds
+   * @param {DataBufferControllerObject} param
    * @throws {Error} When the cache is not set
    */
   constructor ({ cache, logger = console, ttl = 300, raceTimeMs = 30000 }) {
@@ -92,7 +99,7 @@ export default class DataBufferController {
    * @returns {Promise}
    */
   get (key) {
-      return this.getBuffer(key).get()
+    return this.getBuffer(key).get()
   }
 
   // connect the cache and setup some catching
@@ -144,12 +151,19 @@ export default class DataBufferController {
   get amountOfCachedKeys () {
     return Object.keys(this.#items).length
   }
+
   // returns the statusus of the cache, usefull for tests
   get bufferStatus () {
     return Object.values(this.#items).map(dataBuffer => dataBuffer.status)
   }
 
-  static async create(data) {
+  /**
+   * Setup the Controller
+   *
+   * @param {DataBufferControllerObject} data
+   * @return {DataBufferController}
+   **/
+  static async create (data) {
     const dbc = new DataBufferController(data)
     // start the cache
     await dbc.cacheStart()

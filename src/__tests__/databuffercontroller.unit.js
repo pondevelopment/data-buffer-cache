@@ -37,10 +37,10 @@ describe('Test the Controller', () => {
     [{ logger, cache, raceTimeMs: 20 }, { ttl: 300, raceTimeMs: 20 }],
     [{ logger, cache, raceTimeMs: 20, ttl: 200 }, { ttl: 200, raceTimeMs: 20 }],
     [{ cache }, { ttl: 300, raceTimeMs: 30000 }]
-  ])('Basic initialization', (params, expected) => {
-    const dbc = new DataBufferController(params)
+  ])('Basic initialization', async (params, expected) => {
+    const dbc = await DataBufferController.create(params)
     expect(dbc.ttl).toEqual(expected.ttl)
-    expect(dbc.raceTime).toEqual(expected.raceTimeMs)
+    expect(dbc.raceTimeMs).toEqual(expected.raceTimeMs)
     expect(dbc.logger).toBeDefined()
     await dbc.close()
   })
@@ -84,8 +84,8 @@ describe('Test the Controller', () => {
 describe('Multicontroller - single cache usecase', () => {
   test('The sequential requests should be queued, also over multiple controllers, and waiting till the cache has been set', async () => {
     const singleCache = new Cache()
-    const controllerA = await DataBufferController.create({ logger, cache: singleCache, ttl: 5 })
-    const controllerB = await DataBufferController.create({ logger, cache: singleCache, ttl: 5 })
+    const controllerA = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 10000 })
+    const controllerB = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 10000 })
 
     const key = 'multitest'
     const list = [
@@ -97,29 +97,26 @@ describe('Multicontroller - single cache usecase', () => {
     ]
 
     const expectedA = await list[0]
-    expect(expectedA).toBe(undefined)    
+    expect(expectedA).toBe(undefined)
     expect(controllerA.bufferStatus).toEqual(['running'])
     expect(controllerB.bufferStatus).toEqual([])
 
     list.push(controllerB.get(key))
-    //give async job a change to initialize
+    // give async job a change to initialize
     await new Promise(resolve => setTimeout(resolve, 500))
 
     const expectedB = list[5]
     expect(expectedB).not.toBe(undefined)
-    
-    list.push(controllerB.get(key))
-    list.push(controllerB.get(key))
-    list.push(controllerB.get(key))
-    list.push(controllerB.get(key))
+
+    for (let i = 0; i < 4; i++) {
+      list.push(controllerB.get(key))
+    }
 
     expect(controllerB.bufferStatus).toEqual(['running'])
 
-    controllerA.set(key, {found: 42})
+    controllerA.set(key, { found: 42 })
 
-    console.log(list)
     const expectedList = await Promise.all(list)
-    console.log(expectedList)
     expect(expectedList.filter(item => item).length).toBe(9)
 
     await Promise.all([controllerA.close(), controllerB.close()])
