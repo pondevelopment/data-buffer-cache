@@ -73,6 +73,7 @@ export default class DataBufferController {
     await this.#cache.quit()
     Object.values(this.#items).forEach(dataBuffer => dataBuffer.close())
     this.#items = null
+    return 'bye'
   }
 
   /**

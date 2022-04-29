@@ -119,6 +119,42 @@ describe('Multicontroller - single cache usecase', () => {
     const expectedList = await Promise.all(list)
     expect(expectedList.filter(item => item).length).toBe(9)
 
-    await Promise.all([controllerA.close(), controllerB.close()])
+    const result = await Promise.all([controllerA.close(), controllerB.close()])
+    expect(result).toEqual(['bye', 'bye'])
+  })
+
+  test('Multiple controllers, test the semaphore checker', async () => {
+    const singleCache = new Cache()
+    const controllerA = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 5000 })
+    const controllerB = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 2000 })
+    const debugSpy = jest.fn()
+    controllerB.logger.debug = (txt) => debugSpy(txt)
+
+    const key = 'semaphore-checker'
+    const list = [
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key)
+    ]
+    const expectedA = await list[0]
+    expect(expectedA).toBe(undefined)
+
+    list.push(controllerB.get(key))
+    // give async job a change to initialize
+    await new Promise(resolve => setTimeout(resolve, 2500))
+    expect(debugSpy).toBeCalledTimes(13)
+    expect(debugSpy).toHaveBeenCalledWith('Semaphore found')
+    expect(debugSpy).toHaveBeenNthCalledWith(10, 'Checking semaphore')
+    expect(debugSpy).toHaveBeenLastCalledWith('Semaphore is taking too long, aborting!')
+
+    const expectedB = await list[5]
+    expect(expectedB).toBe(undefined)
+
+    const result = await Promise.all([controllerA.close(), controllerB.close()])
+    expect(result).toEqual(['bye', 'bye'])
+    expect(debugSpy).toHaveBeenCalledWith('Closing DataBuffer')
+    expect(debugSpy).toHaveBeenCalledWith('Stopping DataBufferController')
   })
 })

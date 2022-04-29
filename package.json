@@ -1,6 +1,6 @@
 {
   "name": "@pondigitalsolutions/data-buffer-cache",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Prevent bulk requests to your backend, buffer and cache simultaneous requests.",
   "type": "module",
   "main": "src/index.js",
