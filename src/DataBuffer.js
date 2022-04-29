@@ -191,6 +191,7 @@ export default class DataBuffer extends EventEmitter {
         this.#currentStatus = this.#status.running
         this.#foundSemaphore = true
         this.logger.debug('Semaphore found')
+        // first one will start the checking, so there will only be one checkSemaphore process per databuffer
         if (this.#semaphoreChecking === false) {
           this.#semaphoreChecking = true
           this.checkSemaphore()
