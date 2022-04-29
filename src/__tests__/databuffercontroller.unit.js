@@ -13,7 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { expect, describe, test } from '@jest/globals'
+/* eslint max-statements: ["error", 25] */
+
+import { expect, describe, test, jest } from '@jest/globals'
 import DataBufferController from '../DataBufferController.js'
 import Cache from '../Cache.js'
 

@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/* eslint max-statements: ["error", 25] */
+
 import EventEmitter from 'events'
 
 /**
@@ -155,7 +157,7 @@ export default class DataBuffer extends EventEmitter {
 
     // Jump out of the recursion if this variable is set to false
     // or when the racetime has passed
-    if(this.#semaphoreChecking === false || this.#semaphoreCheckCounter > this.#semaphoreAmountChecks) {
+    if (this.#semaphoreChecking === false || this.#semaphoreCheckCounter > this.#semaphoreAmountChecks) {
       this.logger.debug('Semaphore is taking too long, aborting!')
       this.#semaphoreCheckCounter = 0
       this.#semaphoreChecking = false
@@ -237,20 +239,19 @@ export default class DataBuffer extends EventEmitter {
   }
 
   // StackOverflow: https://stackoverflow.com/a/20392392
-  tryParseJSONObject (jsonString){
+  tryParseJSONObject (jsonString) {
     try {
-        var o = JSON.parse(jsonString);
+      const o = JSON.parse(jsonString)
 
-        // Handle non-exception-throwing cases:
-        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-        // but... JSON.parse(null) returns null, and typeof null === "object", 
-        // so we must check for that, too. Thankfully, null is falsey, so this suffices:
-        if (o && typeof o === "object") {
-            return o;
-        }
-    }
-    catch (e) { }
+      // Handle non-exception-throwing cases:
+      // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+      // but... JSON.parse(null) returns null, and typeof null === "object",
+      // so we must check for that, too. Thankfully, null is falsey, so this suffices:
+      if (o && typeof o === 'object') {
+        return o
+      }
+    } catch (e) { }
 
-    return false;
+    return false
   }
 }
