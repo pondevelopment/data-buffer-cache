@@ -34,7 +34,7 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - run: npm ci --production
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
       - run: npm publish
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+         NPM_TOKEN: ${{secrets.NPM_TOKEN}}
