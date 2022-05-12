@@ -8,9 +8,10 @@ The first request is responsible for setting the cache with the correct data. Th
 More examples in the src/example directory
 
 ```javascript
-import DataBufferController from './DataBufferController.js'
+import {DataBufferController, Cache} from '@pondigitalsolutions/data-buffer-cache'
 
-const controller = new DataBufferController(null, console )
+const cache = new Cache()
+const controller = await DataBufferController.create({cache, logger: console})
 
 const val = await controller.get('test')
 console.log('Should be undefined', val) // undefined

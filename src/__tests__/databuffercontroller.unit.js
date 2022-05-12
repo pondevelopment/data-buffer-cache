@@ -13,7 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { expect, describe, test, afterAll } from '@jest/globals'
+/* eslint max-statements: ["error", 25] */
+
+import { expect, describe, test, jest } from '@jest/globals'
 import DataBufferController from '../DataBufferController.js'
 import Cache from '../Cache.js'
 
@@ -25,13 +27,10 @@ const logger = {
 }
 
 const cache = new Cache()
-const controller = new DataBufferController({ logger, ttl: 2, cache })
-
-afterAll(() => controller.close())
 
 describe('Test the Controller', () => {
   test('If the controller throws an error when the cache is not set', () => {
-    expect(() => new DataBufferController({ logger, ttl: 1 })).toThrow('Cache is not provided.')
+    expect(DataBufferController.create({ logger, ttl: 1 })).rejects.toThrow('Cache is not provided.')
   })
 
   test.each([
@@ -40,15 +39,16 @@ describe('Test the Controller', () => {
     [{ logger, cache, raceTimeMs: 20 }, { ttl: 300, raceTimeMs: 20 }],
     [{ logger, cache, raceTimeMs: 20, ttl: 200 }, { ttl: 200, raceTimeMs: 20 }],
     [{ cache }, { ttl: 300, raceTimeMs: 30000 }]
-  ])('Basic initialization', (params, expected) => {
-    const dbc = new DataBufferController(params)
+  ])('Basic initialization', async (params, expected) => {
+    const dbc = await DataBufferController.create(params)
     expect(dbc.ttl).toEqual(expected.ttl)
-    expect(dbc.raceTime).toEqual(expected.raceTime)
+    expect(dbc.raceTimeMs).toEqual(expected.raceTimeMs)
     expect(dbc.logger).toBeDefined()
-    dbc.close()
+    await dbc.close()
   })
 
   test('The basic functionallity', async () => {
+    const controller = await DataBufferController.create({ logger, ttl: 2, cache })
     const key = 'controller_test'
     const expected = await controller.get(key)
     expect(expected).toEqual(undefined)
@@ -56,9 +56,11 @@ describe('Test the Controller', () => {
 
     const expected2 = await controller.get(key)
     expect(expected2).toEqual({ found: true })
+    await controller.close()
   })
 
   test('The sequential requests should be queued and waiting till the cache has been set', async () => {
+    const controller = await DataBufferController.create({ logger, ttl: 2, cache })
     const key = 'test2'
     const list = [
       controller.get(key),
@@ -77,5 +79,84 @@ describe('Test the Controller', () => {
     controller.set(key, { found: true })
     const expected2 = await Promise.all(list)
     expect(expected2.filter(item => item).length).toBe(9)
+    await controller.close()
+  })
+})
+
+describe('Multicontroller - single cache usecase', () => {
+  test('The sequential requests should be queued, also over multiple controllers, and waiting till the cache has been set', async () => {
+    const singleCache = new Cache()
+    const controllerA = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 10000 })
+    const controllerB = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 10000 })
+
+    const key = 'multitest'
+    const list = [
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key)
+    ]
+
+    const expectedA = await list[0]
+    expect(expectedA).toBe(undefined)
+    expect(controllerA.bufferStatus).toEqual(['running'])
+    expect(controllerB.bufferStatus).toEqual([])
+
+    list.push(controllerB.get(key))
+    // give async job a change to initialize
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const expectedB = list[5]
+    expect(expectedB).not.toBe(undefined)
+
+    for (let i = 0; i < 4; i++) {
+      list.push(controllerB.get(key))
+    }
+
+    expect(controllerB.bufferStatus).toEqual(['running'])
+
+    controllerA.set(key, { found: 42 })
+
+    const expectedList = await Promise.all(list)
+    expect(expectedList.filter(item => item).length).toBe(9)
+
+    const result = await Promise.all([controllerA.close(), controllerB.close()])
+    expect(result).toEqual(['bye', 'bye'])
+  })
+
+  test('Multiple controllers, test the semaphore checker', async () => {
+    const singleCache = new Cache()
+    const controllerA = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 5000 })
+    const controllerB = await DataBufferController.create({ logger, cache: singleCache, ttl: 10, raceTimeMs: 2000 })
+    const debugSpy = jest.fn()
+    controllerB.logger.debug = (txt) => debugSpy(txt)
+
+    const key = 'semaphore-checker'
+    const list = [
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key),
+      controllerA.get(key)
+    ]
+    const expectedA = await list[0]
+    expect(expectedA).toBe(undefined)
+
+    list.push(controllerB.get(key))
+    // give async job a change to initialize
+    await new Promise(resolve => setTimeout(resolve, 2500))
+    expect(debugSpy).toBeCalledTimes(13)
+    expect(debugSpy).toHaveBeenCalledWith('Semaphore found')
+    expect(debugSpy).toHaveBeenNthCalledWith(10, 'Checking semaphore')
+    expect(debugSpy).toHaveBeenLastCalledWith('Semaphore is taking too long, aborting!')
+
+    const expectedB = await list[5]
+    expect(expectedB).toBe(undefined)
+
+    const result = await Promise.all([controllerA.close(), controllerB.close()])
+    expect(result).toEqual(['bye', 'bye'])
+    expect(debugSpy).toHaveBeenCalledWith('Closing DataBuffer')
+    expect(debugSpy).toHaveBeenCalledWith('Stopping DataBufferController')
   })
 })

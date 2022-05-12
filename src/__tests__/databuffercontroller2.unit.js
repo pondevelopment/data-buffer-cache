@@ -25,13 +25,13 @@ const logger = {
 }
 
 describe('Test the Controller', () => {
-  test('The timer should call the CacheClean function periodically', () => {
+  test('The timer should call the CacheClean function periodically', async () => {
     const cache = new Cache()
     jest.useFakeTimers('modern')
     jest.setSystemTime(new Date(2020, 12, 5, 20, 0, 0))
     const cleanSpy = jest.fn()
     const ttl = 2
-    const controller = new DataBufferController({ logger, ttl, cache })
+    const controller = await DataBufferController.create({ logger, ttl, cache })
     controller.logger.trace = (txt) => cleanSpy(txt)
     expect(cleanSpy).toHaveBeenCalledTimes(0)
     expect(controller.amountOfCachedKeys).toBe(0)
@@ -48,7 +48,7 @@ describe('Test the Controller', () => {
     controller.close()
   })
 
-  test('Test the Cache emitters', () => {
+  test('Test the Cache emitters', async () => {
     const cache = new Cache()
 
     const cleanSpy1 = jest.fn()
@@ -61,11 +61,12 @@ describe('Test the Controller', () => {
     }
 
     const ttl = 2
-    const controller = new DataBufferController({ logger: loggerSpy, cache, ttl, raceTimeMs: 20 })
+    const controller = await DataBufferController.create({ logger: loggerSpy, cache, ttl, raceTimeMs: 20 })
 
-    expect(cleanSpy2).toHaveBeenCalledTimes(2)
+    expect(cleanSpy2).toHaveBeenCalledTimes(3)
     expect(cleanSpy2).toHaveBeenCalledWith('Cache is Connected')
-    expect(cleanSpy2).toHaveBeenLastCalledWith('Cache is Ready')
+    expect(cleanSpy2).toHaveBeenCalledWith('Cache is Ready')
+    expect(cleanSpy2).toHaveBeenLastCalledWith('Cache is Setup')
     cache.emit('error', 'Emitted Error')
     expect(cleanSpy1).toHaveBeenCalledTimes(2)
     expect(cleanSpy1).toHaveBeenCalledWith('CACHE ERROR')

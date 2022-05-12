@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/* eslint max-statements: ["error", 25] */
+
 import EventEmitter from 'events'
 
 /**
@@ -31,6 +33,13 @@ export default class DataBuffer extends EventEmitter {
   #allowedRaceTimeMs
   #currentStatus
   #cache
+
+  #semaphore = 'DIBS'
+  #closing = false
+  #foundSemaphore = false
+  #semaphoreChecking = false
+  #semaphoreAmountChecks = 10
+  #semaphoreCheckCounter = 0
 
   /**
    * Initialize the DataBuffer
@@ -56,11 +65,17 @@ export default class DataBuffer extends EventEmitter {
     this.#currentStatus = this.#status.init
   }
 
+  close () {
+    this.logger.debug('Closing DataBuffer')
+    this.removeAllListeners()
+    this.#closing = true
+  }
+
   get ttl () {
     return this.#stdTTL
   }
 
-  get raceTime () {
+  get raceTimeMs () {
     return this.#allowedRaceTimeMs
   }
 
@@ -90,15 +105,22 @@ export default class DataBuffer extends EventEmitter {
    * Return a promise that resolves with the data
    * or undefined when it was expired, not available or timed out
    *
-   * @returns {Promise<undefined|object|Array>}
+   * @returns {Promise<undefined|object|array>}
    */
   async get () {
+    // If cache exists, set the status and proceed
     try {
       const result = await this.#cache.exists(this.key)
       if (result !== false) {
         this.#currentStatus = this.#status.finished
       }
     } catch (e) { }
+
+    // if the status is still set on initializing set a semaphore
+    if (this.#currentStatus === this.#status.init) {
+      this.#cache.set(this.key, this.#semaphore)
+    }
+
     return this.waitForResponse()
   }
 
@@ -115,10 +137,39 @@ export default class DataBuffer extends EventEmitter {
     }
 
     const result = await this.#cache.set(this.key, JSON.stringify(value), { EX: ttl })
+    this.triggerItemSet(ttl)
+    return result
+  }
+
+  async checkSemaphore () {
+    await new Promise(resolve => setTimeout(resolve, this.#allowedRaceTimeMs / this.#semaphoreAmountChecks))
+    this.logger.debug('Checking semaphore')
+    this.#semaphoreCheckCounter++
+    const data = await this.#cache.get(this.key)
+    if (data !== this.#semaphore) {
+      this.logger.debug('Semaphore is replaced with real data!')
+      this.triggerItemSet()
+      this.#semaphoreChecking = false
+      this.#foundSemaphore = false
+      this.#semaphoreCheckCounter = 0
+      return true
+    }
+
+    // Jump out of the recursion if this variable is set to false
+    // or when the racetime has passed
+    if (this.#semaphoreChecking === false || this.#semaphoreCheckCounter > this.#semaphoreAmountChecks) {
+      this.logger.debug('Semaphore is taking too long, aborting!')
+      this.#semaphoreCheckCounter = 0
+      this.#semaphoreChecking = false
+      return false
+    }
+    return this.checkSemaphore()
+  }
+
+  triggerItemSet (ttl = this.#stdTTL) {
     this.#currentStatus = this.#status.finished
     this.setExpiry(ttl) // reset expiry
     this.emit(this.#status.finished) // notify all observers waiting for this request
-    return result
   }
 
   /**
@@ -132,19 +183,33 @@ export default class DataBuffer extends EventEmitter {
       return undefined
     }
 
-    // the status is finished if the data is still there return it
+    // the status is finished and if the data is still there return it
     if (this.#currentStatus === this.#status.finished) {
       const data = await this.#cache.get(this.key)
 
+      if (data === this.#semaphore) {
+        this.#currentStatus = this.#status.running
+        this.#foundSemaphore = true
+        this.logger.debug('Semaphore found')
+        // first one will start the checking, so there will only be one checkSemaphore process per databuffer
+        if (this.#semaphoreChecking === false) {
+          this.#semaphoreChecking = true
+          this.checkSemaphore()
+        }
+        return this.waitForResponse()
+      }
+
       // it is possible that the cache is expired between exists call and the get call
       // if that happens restart the process
-      if (data === undefined || data === null) {
+      const parsedJSON = this.tryParseJSONObject(data)
+
+      if (parsedJSON === false) {
         this.#currentStatus = this.#status.running
         return undefined
       }
 
-      this.logger.trace(`Cache hit for key: ${this.key}`)
-      return JSON.parse(data)
+      this.logger.debug(`Cache hit for key: ${this.key}`)
+      return parsedJSON
     }
 
     // the status is running, so we wait until the cache gets set
@@ -172,5 +237,22 @@ export default class DataBuffer extends EventEmitter {
 
     // return who's done first
     return Promise.race([dataPromise, timeoutPromise])
+  }
+
+  // StackOverflow: https://stackoverflow.com/a/20392392
+  tryParseJSONObject (jsonString) {
+    try {
+      const o = JSON.parse(jsonString)
+
+      // Handle non-exception-throwing cases:
+      // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+      // but... JSON.parse(null) returns null, and typeof null === "object",
+      // so we must check for that, too. Thankfully, null is falsey, so this suffices:
+      if (o && typeof o === 'object') {
+        return o
+      }
+    } catch (e) { }
+
+    return false
   }
 }
