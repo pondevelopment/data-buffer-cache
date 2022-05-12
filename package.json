@@ -1,6 +1,6 @@
 {
-  "name": "@pondigitalsolutions/data-buffer-cache",
-  "version": "0.0.1",
+  "name": "@pondevelopment/data-buffer-cache",
+  "version": "1.0.0",
   "description": "Prevent bulk requests to your backend, buffer and cache simultaneous requests.",
   "type": "module",
   "main": "src/index.js",
@@ -43,7 +43,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/pondigitalsolutions/data-buffer-cache.git"
+    "url": "https://github.com/pondevelopment/data-buffer-cache.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
