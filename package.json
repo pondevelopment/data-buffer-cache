@@ -1,6 +1,6 @@
 {
-  "name": "@pondigitalsolutions/data-buffer-cache",
-  "version": "0.0.1",
+  "name": "@pondevelopment/data-buffer-cache",
+  "version": "1.0.0",
   "description": "Prevent bulk requests to your backend, buffer and cache simultaneous requests.",
   "type": "module",
   "main": "src/index.js",
@@ -22,7 +22,6 @@
     "lint:fix": "ponstandard src --fix",
     "test": "jest --detectOpenHandles",
     "test:watch": "jest src --watch",
-    "coveralls": "jest && codecov && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "cpd": "node_modules/jscpd/bin/jscpd src",
     "vulnerabilities": "npm audit --production"
   },
@@ -43,30 +42,28 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/pondigitalsolutions/data-buffer-cache.git"
+    "url": "https://github.com/pondevelopment/data-buffer-cache.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/eslint-parser": "^7.14.7",
-    "@babel/plugin-transform-modules-commonjs": "^7.14.0",
+    "@babel/core": "^7.17.10",
+    "@babel/eslint-parser": "^7.17.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.17.9",
     "@babel/preset-env": "^7.12.10",
-    "@jest/globals": "^27.0.6",
+    "@jest/globals": "^28.1.0",
     "@pondevelopment/ponstandard": "^1.0.0",
-    "babel-jest": "^27.0.6",
-    "codecov": "^3.8.1",
-    "coveralls": "^3.1.0",
-    "eslint": "^8.4.1",
+    "babel-jest": "^28.1.0",
+    "eslint": "^8.15.0",
     "esm": "^3.2.25",
-    "jest": "^27.0.6",
-    "jest-junit": "^13.0.0",
+    "jest": "^28.0.1",
+    "jest-junit": "^13.2.0",
     "jest-sonar-reporter": "^2.0.0",
-    "jscpd": "^3.3.26",
-    "prettier": "^2.2.0",
-    "redis": "^4.0.6",
-    "standard": "^16.0.3",
+    "jscpd": "^3.4.5",
+    "prettier": "^2.6.2",
+    "redis": "^4.1.0",
+    "standard": "^17.0.0",
     "standard-reporter": "^1.0.5"
   },
   "engines": {
