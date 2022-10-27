@@ -64,6 +64,16 @@ export default class DataBufferController {
     this.#intervalRef = setInterval(this.cacheCleaning.bind(this), this.ttl * this.#fifthSecondInMs)
   }
 
+  /**
+   * generates a cache key, all arguments joined together with an underscore
+   *
+   * @param  {...any} args
+   * @returns {string} the cache key
+   */
+  key (...args) {
+    return this.constructor.key(...args)
+  }
+
   // cleanup
   async close () {
     this.logger.debug('Stopping DataBufferController')
@@ -145,5 +155,15 @@ export default class DataBufferController {
   // returns the amount of the cached keys, usefull for tests
   get amountOfCachedKeys () {
     return Object.keys(this.#items).length
+  }
+
+  /**
+   * generates a cache key, all arguments joined together with an underscore
+   *
+   * @param  {...any} args
+   * @returns {string} the cache key
+   */
+   static key (...args) {
+    return Object.values(args).filter(item => item).join('_')
   }
 }
