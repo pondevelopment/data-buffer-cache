@@ -9,7 +9,9 @@ export default {
 
   testMatch: ['**/__tests__/*.js'],
 
-  testURL: 'http://localhost:8080/',
+  testEnvironmentOptions: { 
+    url: 'http://localhost:8080/'
+  },
 
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.js'],
