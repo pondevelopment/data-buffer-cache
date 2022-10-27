@@ -35,15 +35,15 @@ describe('Test the Controller', () => {
   })
 
   test('Get a key', () => {
-    expect(DataBufferController.key('test',1,2,'hi')).toEqual('test_1_2_hi')
-    expect(controller.key('test',1,2,'hi')).toEqual('test_1_2_hi')
+    expect(DataBufferController.key('test', 1, 2, 'hi')).toEqual('test_1_2_hi')
+    expect(controller.key('test', 1, 2, 'hi')).toEqual('test_1_2_hi')
   })
 
   test.each([
-    { args: ['a', 'b'],  key: 'a_b'},
-    { args: ['a', 'b', 'c'],  key: 'a_b_c'},
-    { args: ['a', 'b', 'c', 'd'],  key: 'a_b_c_d'}
-  ])('Get a key for $args', ({args, key}) => {
+    { args: ['a', 'b'], key: 'a_b' },
+    { args: ['a', 'b', 'c'], key: 'a_b_c' },
+    { args: ['a', 'b', 'c', 'd'], key: 'a_b_c_d' }
+  ])('Get a key for $args', ({ args, key }) => {
     expect(DataBufferController.key(...args)).toEqual(key)
     expect(controller.key(...args)).toEqual(key)
   })

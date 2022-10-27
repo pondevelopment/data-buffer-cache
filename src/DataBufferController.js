@@ -163,7 +163,7 @@ export default class DataBufferController {
    * @param  {...any} args
    * @returns {string} the cache key
    */
-   static key (...args) {
+  static key (...args) {
     return Object.values(args).filter(item => item).join('_')
   }
 }
